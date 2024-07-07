@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import FetchRestaurantContext from "../context/FetchRestaurantContext";
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Typography, List, ListItem, ListItemText, IconButton, Box, Button, TextField } from '@mui/material';
@@ -30,18 +30,25 @@ const RestaurantList = () => {
     const { restaurantList, fetchData, setRestaurantList } = useContext(FetchRestaurantContext);
     const { deleteRestaurant } = useContext(DeleteRestaurantContext);
     const navigate = useNavigate();
+    const isFirstRender = useRef(true);
 
     useEffect(() => {
         fetchData();
     }, []);
 
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
         const handleSearch = async () => {
             const response = await fetch(`http://localhost:5000/api/restaurants/search?q=${debouncedSearchTerm}`);
             const data = await response.json();
             setRestaurantList(data);
         }
         handleSearch();
+
     }, [debouncedSearchTerm]);
 
     const handleDelete = async (id) => {
@@ -81,14 +88,6 @@ const RestaurantList = () => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    {/* <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => navigate('/add')}
-                        style={{marginLeft: '10px'}}
-                    >
-                        Search
-                    </Button> */}
                 </Box>
                 <List>
                     {restaurantList.map((restaurant) => {
@@ -131,8 +130,18 @@ const RestaurantList = () => {
     } else {
         return (
             <Container maxWidth="md">
-                <Box display="flex" justifyContent="center">
-                    <Typography>No Restaurant Found</Typography>
+                <Box display="flex" alignItems="center" justifyContent="space-around" mb={3}>
+                    <Typography variant="h4" gutterBottom>
+                        No Restaurant Found
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => navigate('/add')}
+                    >
+                        Add Restaurant
+                    </Button>
+
                 </Box>
             </Container>
         )
